@@ -4,53 +4,14 @@ import pyglet.gl as gl
 
 import algorithms as algo
 import constants as const
+import palette_manager as palet
 
 class Artist():
     def __init__(self) -> None:
         self.primaryColor = (0, 0, 0, 255)
         self.secondaryColor = (255, 0, 0, 255)
         self.mode = "pencil"
-
-class ModeButton():
-    def __init__(self, x, y, baseBatch, batch, index = 0):
-        self.x = 14 + x * 28
-        self.y = 14 + y * 28
-        self.mode = ""
-        self.index = index
-        self.hover = False
-        self.color = (120, 120, 120, 255)
-
-        self.image = pyglet.image.SolidColorImagePattern(self.color).create_image(24, 24)
-        self.sprite = pyglet.sprite.Sprite(self.image, x=self.x, y=self.y, batch=baseBatch)
-
-        if self.index == 0:
-            self.mode = "pencil"
-            img = pyglet.image.load('./icons/pencil.png')
-            self.icon = pyglet.sprite.Sprite(img, x=self.x+4, y=self.y+4, batch=batch)
-        elif self.index == 1:
-            self.mode = "eraser"
-            img = pyglet.image.load('./icons/eraser.png')
-            self.icon = pyglet.sprite.Sprite(img, x=self.x+4, y=self.y+4, batch=batch)
-        elif self.index == 2:
-            self.mode = "dropper"
-            img = pyglet.image.load('./icons/dropper.png')
-            self.icon = pyglet.sprite.Sprite(img, x=self.x+4, y=self.y+4, batch=batch)
-        elif self.index == 3:
-            self.mode = "line"
-            img = pyglet.image.load('./icons/line.png')
-            self.icon = pyglet.sprite.Sprite(img, x=self.x+4, y=self.y+4, batch=batch)
-        elif self.index == 5:
-            self.mode = "rectangle"
-            img = pyglet.image.load('./icons/rect.png')
-            self.icon = pyglet.sprite.Sprite(img, x=self.x+4, y=self.y+4, batch=batch)
-        elif self.index == 6:
-            self.mode = "ellipse"
-            img = pyglet.image.load('./icons/ellipse.png')
-            self.icon = pyglet.sprite.Sprite(img, x=self.x+4, y=self.y+4, batch=batch)
-        elif self.index == 7:
-            self.mode = "fill"
-            img = pyglet.image.load('./icons/paint-bucket.png')
-            self.icon = pyglet.sprite.Sprite(img, x=self.x+4, y=self.y+4, batch=batch)
+        self.palette = palet.read_hex_to_rgb("./palette_default.hex")
 
 class Canvas():
     def __init__(self, width, height) -> None:
@@ -196,6 +157,56 @@ class Canvas():
 
         self.background = self.canvasBgSprite
 
+class ModeButton():
+    def __init__(self, x, y, baseBatch, batch, index = 0):
+        self.x = 14 + x * 28
+        self.y = 14 + y * 28
+        self.mode = ""
+        self.index = index
+        self.hover = False
+        self.color = (120, 120, 120, 255)
+
+        self.image = pyglet.image.SolidColorImagePattern(self.color).create_image(24, 24)
+        self.sprite = pyglet.sprite.Sprite(self.image, x=self.x, y=self.y, batch=baseBatch)
+
+        if self.index == 0:
+            self.mode = "pencil"
+            img = pyglet.image.load('./icons/pencil.png')
+            self.icon = pyglet.sprite.Sprite(img, x=self.x+4, y=self.y+4, batch=batch)
+        elif self.index == 1:
+            self.mode = "eraser"
+            img = pyglet.image.load('./icons/eraser.png')
+            self.icon = pyglet.sprite.Sprite(img, x=self.x+4, y=self.y+4, batch=batch)
+        elif self.index == 2:
+            self.mode = "dropper"
+            img = pyglet.image.load('./icons/dropper.png')
+            self.icon = pyglet.sprite.Sprite(img, x=self.x+4, y=self.y+4, batch=batch)
+        elif self.index == 3:
+            self.mode = "line"
+            img = pyglet.image.load('./icons/line.png')
+            self.icon = pyglet.sprite.Sprite(img, x=self.x+4, y=self.y+4, batch=batch)
+        elif self.index == 5:
+            self.mode = "rectangle"
+            img = pyglet.image.load('./icons/rect.png')
+            self.icon = pyglet.sprite.Sprite(img, x=self.x+4, y=self.y+4, batch=batch)
+        elif self.index == 6:
+            self.mode = "ellipse"
+            img = pyglet.image.load('./icons/ellipse.png')
+            self.icon = pyglet.sprite.Sprite(img, x=self.x+4, y=self.y+4, batch=batch)
+        elif self.index == 7:
+            self.mode = "fill"
+            img = pyglet.image.load('./icons/paint-bucket.png')
+            self.icon = pyglet.sprite.Sprite(img, x=self.x+4, y=self.y+4, batch=batch)
+
+class PaletteButton():
+    def __init__(self, x, y, color, batch):
+        self.x = x
+        self.y = y
+        self.color = color
+
+        self.image = pyglet.image.SolidColorImagePattern(self.color).create_image(16, 16)
+        self.sprite = pyglet.sprite.Sprite(self.image, x=x, y=y, batch=batch)
+
 class Window(pyglet.window.Window):
     def __init__(self, width, height, canvas, artist, *args, **kwargs):
         super().__init__(width, height, *args, **kwargs)
@@ -216,16 +227,20 @@ class Window(pyglet.window.Window):
         self.modeButtons = []
         self.init_modebuttons()
 
-        # Pixel cursor
+        # pixel cursor
         self.pixelCursorImage = pyglet.image.SolidColorImagePattern(
                     (0,0,0,96)).create_image(
                     1,
                     1)
         self.pixelCursorSprite = None
 
-        # Shadow for pressing mode buttons
+        # shadow for pressing mode buttons
         self.buttonShadowImage = pyglet.image.SolidColorImagePattern((0, 0, 0, 96)).create_image(24, 24)
         self.buttonShadowSprite = pyglet.sprite.Sprite(self.buttonShadowImage, x=14, y=42)
+
+        # shadow for palette
+        self.paletteShadowImage = pyglet.image.SolidColorImagePattern((0, 0, 0, 96)).create_image(16, 16)
+        self.paletteShadowSprite = pyglet.sprite.Sprite(self.paletteShadowImage, x=0, y=100) 
 
         for y in range(0, const.CANVAS_SIZE_Y):
             self.canvas.pixelMatrix.append([])
@@ -241,6 +256,8 @@ class Window(pyglet.window.Window):
         self.init_artist(artist)
         self.init_camera()
         self.init_toolbar_backgrounds()
+        self.init_palette()
+        self.set_color_display()
         self.set_app_icon()
         self.set_window_background_color()
         self.update_zoom_percentage_label()
@@ -360,6 +377,46 @@ class Window(pyglet.window.Window):
             else:
                 self.modeButtons.append(ModeButton(i-cut, 0, self.topToolbarBatch, self.topToolbarIconBatch, i))
 
+    def init_palette(self):
+        x, y = 180, 0
+        cut = 11           # How many palette colors in one row
+
+        # Left color label
+        self.colorleft_label = pyglet.text.Label("Left:",
+                font_name=const.FONT_NAME,
+                font_size=9,
+                x=x, y=y+48,
+                anchor_x='left', anchor_y='bottom', bold=const.FONT_BOLD, batch=self.topToolbarBatch)
+
+        # Right color label
+        self.colorright_label = pyglet.text.Label("Right:",
+                font_name=const.FONT_NAME,
+                font_size=9,
+                x=x+35, y=y+48,
+                anchor_x='left', anchor_y='bottom', bold=const.FONT_BOLD, batch=self.topToolbarBatch)
+
+        # Initialize palette
+        self.palette = []
+        self.paletteColors = []
+
+        for index in range(0, 33):
+            # First row
+            if index < cut:
+                xx = x + 76 + index*16 + index*4
+                yy = y + 52
+            else:
+                # Second row
+                if index < 2*cut:
+                    xx = x + 76 + (index-cut)*16 + (index-cut)*4
+                    yy = y + 32
+                # Third row
+                else:
+                    xx = x + 76 + (index-2*cut)*16 + (index-2*cut)*4
+                    yy = y + 12
+
+            self.paletteColors.append(PaletteButton(xx, yy, self.artist.palette[index], self.topToolbarBatch))
+
+
     def init_toolbar_backgrounds(self):
         bgCol = const.WINDOW_TOOLBAR_COLOR
 
@@ -390,7 +447,10 @@ class Window(pyglet.window.Window):
 
         self.draw_top_toolbar_background()
         self.draw_top_toolbar_icons()
+        self.paletteLeftColorSprite.draw()
+        self.paletteRightColorSprite.draw()
         self.buttonShadowSprite.draw()
+        self.paletteShadowSprite.draw()
         
 
     def on_key_press(self, symbol, modifiers):
@@ -467,6 +527,21 @@ class Window(pyglet.window.Window):
         else:
             if y > self.height - 80:
                 found = False
+                for box in self.paletteColors:
+                    if box.x < x < box.x + 16 and self.height - 80 + box.y < y < self.height - 80 + box.y + 16:
+                        if button == pyglet.window.mouse.LEFT:
+                            self.artist.primaryColor = box.color
+                        elif button == pyglet.window.mouse.RIGHT:
+                            self.artist.secondaryColor = box.color
+
+                        # Draw shadow on clicked item
+                        self.paletteShadowSprite.x = box.x
+                        self.paletteShadowSprite.y = box.y
+
+                        # Update toolbar 
+                        self.set_color_display()
+                        found = True
+                        break
                 if found == False:
                     for box in self.modeButtons:
                         if box.x < x < box.x + 24 and self.height - 80 + box.y < y < self.height - 80 + box.y + 24:
@@ -488,6 +563,10 @@ class Window(pyglet.window.Window):
     def on_mouse_release(self, x, y, button, modifiers):
         # apply preview layer to image layer
         self.apply_preview()
+
+        # Remove shadow from palette item
+        self.paletteShadowSprite.x = 0
+        self.paletteShadowSprite.y = 100
 
     def on_mouse_scroll(self, x, y, dx, dy):
         self.zoom(x, y, dy)
@@ -528,6 +607,15 @@ class Window(pyglet.window.Window):
     def set_app_icon(self):
         self.icon = pyglet.image.load(const.APP_ICON_PATH)
         self.set_icon(self.icon)
+
+    def set_color_display(self):
+        # Left color display
+        self.paletteLeftColorImage = pyglet.image.SolidColorImagePattern(self.artist.primaryColor).create_image(24, 24)
+        self.paletteLeftColorSprite = pyglet.sprite.Sprite(self.paletteLeftColorImage, x = 180, y = 22)
+
+        # Right color display
+        self.paletteRightColorImage = pyglet.image.SolidColorImagePattern(self.artist.secondaryColor).create_image(24, 24)
+        self.paletteRightColorSprite = pyglet.sprite.Sprite(self.paletteRightColorImage, x = 180 + 38, y = 22)
 
     def set_mouse_coordinates(self, x, y):
         # position of the mouse relative to window (0.0-1.0)

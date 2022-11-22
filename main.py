@@ -8,7 +8,7 @@ import constants as const
 class Artist():
     def __init__(self) -> None:
         self.primaryColor = (0, 0, 0, 255)
-        self.secondaryColor = (255, 255, 255, 255)
+        self.secondaryColor = (255, 0, 0, 255)
         self.mode = 0
 
 class Canvas():
@@ -35,7 +35,7 @@ class Canvas():
         """
         matrixPosY = len(self.pixelMatrix) - 1 - pos[1]
 
-        if 0 <= matrixPosY < const.CANVAS_SIZE and 0 <= pos[0] < const.CANVAS_SIZE:
+        if 0 <= matrixPosY < const.CANVAS_SIZE_Y and 0 <= pos[0] < const.CANVAS_SIZE_X:
             self.add_pixel_to_batch((pos[0], matrixPosY), color, pixelBatch)
             self.pixelMatrix[matrixPosY][pos[0]] = color
 
@@ -80,7 +80,7 @@ class Canvas():
     def update_background(self):
         self.canvasBgImage = pyglet.image.SolidColorImagePattern(self.backgroundColor).create_image(self.width, self.height)
 
-        # remove gl interpolation for clean zoom
+        # remove gl interpolation for sharp canvas edges when zoomed
         canvasBgTexture = self.canvasBgImage.get_texture()
         gl.glBindTexture(gl.GL_TEXTURE_2D, canvasBgTexture.id)
         gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, gl.GL_NEAREST)
@@ -103,10 +103,10 @@ class Window(pyglet.window.Window):
 
         self.pixelBatch = pyglet.graphics.Batch()
 
-        for y in range(0, const.CANVAS_SIZE):
+        for y in range(0, const.CANVAS_SIZE_Y):
             self.canvas.pixelMatrix.append([])
             self.canvas.pixelBatchMatrix.append([])
-            for _ in range(0, const.CANVAS_SIZE):
+            for _ in range(0, const.CANVAS_SIZE_X):
                 self.canvas.pixelMatrix[y].append((0, 0, 0, 0))
                 self.canvas.pixelBatchMatrix[y].append(None)
 
@@ -236,16 +236,23 @@ class Window(pyglet.window.Window):
 
         if abs(self.canvas.endPos[0] - self.canvas.beginningPos[0]) > 0 \
         or abs(self.canvas.endPos[1] - self.canvas.beginningPos[1]) > 0:
-            self.canvas.draw_line(self.artist.primaryColor, self.pixelBatch)
-            self.canvas.beginningPos[0], self.canvas.beginningPos[1] = self.canvas.endPos[0], self.canvas.endPos[1]
+            if self.artist.mode == 0: # pencil tool
+                if button == pyglet.window.mouse.LEFT:
+                    self.canvas.draw_line(self.artist.primaryColor, self.pixelBatch)
+                elif button == pyglet.window.mouse.RIGHT:
+                    self.canvas.draw_line(self.artist.secondaryColor, self.pixelBatch)
+                self.canvas.beginningPos[0], self.canvas.beginningPos[1] = self.canvas.endPos[0], self.canvas.endPos[1]
 
-    def on_mouse_press(self, x, y, buttons, modifiers):
+    def on_mouse_press(self, x, y, button, modifiers):
         self.set_mouse_coordinates(x, y)
 
         if self.canvas.is_mouse_on_canvas(self.mousePos[0], self.mousePos[1]):
             self.canvas.beginningPos[0], self.canvas.beginningPos[1] = self.canvas.mousePos[0], self.canvas.mousePos[1]
-            if self.artist.mode == 0:
-                self.canvas.draw_point(self.artist.primaryColor, self.pixelBatch)
+            if self.artist.mode == 0: # pencil tool
+                if button == pyglet.window.mouse.LEFT:
+                    self.canvas.draw_point(self.artist.primaryColor, self.pixelBatch)
+                elif button == pyglet.window.mouse.RIGHT:
+                    self.canvas.draw_point(self.artist.secondaryColor, self.pixelBatch)
 
     def on_mouse_motion(self, x, y, dx, dy):
         self.set_mouse_coordinates(x, y)
@@ -333,7 +340,6 @@ class Window(pyglet.window.Window):
             anchor_x='left', anchor_y='bottom', bold=const.FONT_BOLD)
 
     def zoom(self, x, y, dy):
-        # TODO: FIX OUT ZOOM
         # get scale factor based on which direction the scroll was
         factor = 1
         if dy < 0:
@@ -388,6 +394,6 @@ if __name__ == "__main__":
 
     appArtist = Artist()
     appCanvas = Canvas(
-        const.CANVAS_SIZE, const.CANVAS_SIZE)
+        const.CANVAS_SIZE_X, const.CANVAS_SIZE_Y)
     appWindow = Window(
         const.WINDOW_START_WIDTH, const.WINDOW_START_HEIGHT, appCanvas, appArtist, resizable=True, caption=const.APP_NAME).run()

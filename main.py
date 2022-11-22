@@ -29,47 +29,73 @@ class Canvas():
 
         self.gridOn = False
 
-    def add_pixel(self, pos, color, pixelBatch):
+    def add_pixel(self, pos, color, matrix, batch):
         """
         Adds the pixel to the canvas matrix and calls a function to add the pixel to the batch.
         """
-        matrixPosY = len(self.pixelMatrix) - 1 - pos[1]
+        if matrix == "pixel":
+            matrixPosY = len(self.pixelMatrix) - 1 - pos[1]
 
-        if 0 <= matrixPosY < const.CANVAS_SIZE_Y and 0 <= pos[0] < const.CANVAS_SIZE_X:
-            self.add_pixel_to_batch((pos[0], matrixPosY), color, pixelBatch)
-            self.pixelMatrix[matrixPosY][pos[0]] = color
+            if 0 <= matrixPosY < const.CANVAS_SIZE_Y and 0 <= pos[0] < const.CANVAS_SIZE_X:
+                self.add_pixel_to_batch((pos[0], matrixPosY), color, matrix, batch)
+                self.pixelMatrix[matrixPosY][pos[0]] = color
+        elif matrix == "preview":
+            matrixPosY = len(self.previewMatrix) - 1 - pos[1]
 
-    def add_pixel_to_batch(self, pos, color, pixelBatch):
+            if 0 <= matrixPosY < const.CANVAS_SIZE_Y and 0 <= pos[0] < const.CANVAS_SIZE_X:
+                self.add_pixel_to_batch((pos[0], matrixPosY), color, matrix, batch)
+                self.previewMatrix[matrixPosY][pos[0]] = color
+
+    def add_pixel_to_batch(self, pos, color, matrix, batch):
         """
         Adds a pixel to the batch in order to be drawn on screen
         """
         x = pos[0] + self.origin[0]                          # convert pixel position to canvas position
         y = (self.height - pos[1]) + self.origin[1]
 
-        if not self.pixelBatchMatrix[pos[1]][pos[0]] == None:                              
-            self.pixelBatchMatrix[pos[1]][pos[0]].delete()   # delete pixel from batch before replacing it                 
-        
-        self.pixelBatchMatrix[pos[1]][pos[0]] = pixelBatch.add(4, pyglet.gl.GL_QUADS, None,   # add a pixel to the batch
-            ('v2f', [x, 
-                    y - 1, 
-                    x + 1, 
-                    y - 1, 
-                    x + 1, 
-                    y, 
-                    x, 
-                    y]),
-            ('c4B', (color[0], color[1], color[2], color[3], 
-                    color[0], color[1], color[2], color[3], 
-                    color[0], color[1], color[2], color[3], 
-                    color[0], color[1], color[2], color[3])))
+        if matrix == "pixel":
+            if not self.pixelBatchMatrix[pos[1]][pos[0]] == None:                              
+                self.pixelBatchMatrix[pos[1]][pos[0]].delete()   # delete pixel from batch before replacing it                 
+            
+            self.pixelBatchMatrix[pos[1]][pos[0]] = batch.add(4, pyglet.gl.GL_QUADS, None,   # add a pixel to the batch
+                ('v2f', [x, 
+                        y - 1, 
+                        x + 1, 
+                        y - 1, 
+                        x + 1, 
+                        y, 
+                        x, 
+                        y]),
+                ('c4B', (color[0], color[1], color[2], color[3], 
+                        color[0], color[1], color[2], color[3], 
+                        color[0], color[1], color[2], color[3], 
+                        color[0], color[1], color[2], color[3])))
+        elif matrix == "preview":
+            #color = (0, 255, 0, 0) # debug color for testing batch transfer
+            if not self.previewBatchMatrix[pos[1]][pos[0]] == None:                              
+                self.previewBatchMatrix[pos[1]][pos[0]].delete()   # delete pixel from batch before replacing it                 
+            
+            self.previewBatchMatrix[pos[1]][pos[0]] = batch.add(4, pyglet.gl.GL_QUADS, None,   # add a pixel to the batch
+                ('v2f', [x, 
+                        y - 1, 
+                        x + 1, 
+                        y - 1, 
+                        x + 1, 
+                        y, 
+                        x, 
+                        y]),
+                ('c4B', (color[0], color[1], color[2], color[3], 
+                        color[0], color[1], color[2], color[3], 
+                        color[0], color[1], color[2], color[3], 
+                        color[0], color[1], color[2], color[3])))
 
     def draw_point(self, color, batch):
-        self.add_pixel(self.mousePos, color, batch)
+        self.add_pixel(self.mousePos, color, "preview", batch)
 
     def draw_line(self, color, batch):
         pixels = algo.bresenham_line(self.beginningPos, self.endPos)
         for pixel in pixels:
-            self.add_pixel(pixel, color, batch)
+            self.add_pixel(pixel, color, "preview", batch)
 
     def is_mouse_on_canvas(self, x, y):
         wWd2, wHd2 = const.WINDOW_START_WIDTH/2, const.WINDOW_START_HEIGHT/2
@@ -102,13 +128,18 @@ class Window(pyglet.window.Window):
         self.init_canvas(canvas)
 
         self.pixelBatch = pyglet.graphics.Batch()
+        self.previewBatch = pyglet.graphics.Batch()
 
         for y in range(0, const.CANVAS_SIZE_Y):
             self.canvas.pixelMatrix.append([])
             self.canvas.pixelBatchMatrix.append([])
+            self.canvas.previewMatrix.append([])
+            self.canvas.previewBatchMatrix.append([])
             for _ in range(0, const.CANVAS_SIZE_X):
-                self.canvas.pixelMatrix[y].append((0, 0, 0, 0))
+                self.canvas.pixelMatrix[y].append((255, 255, 255, 0))
                 self.canvas.pixelBatchMatrix[y].append(None)
+                self.canvas.previewMatrix[y].append((255, 255, 255, 0))
+                self.canvas.previewBatchMatrix[y].append(None)
 
         self.init_artist(artist)
         
@@ -118,6 +149,18 @@ class Window(pyglet.window.Window):
         self.set_window_background_color()
         self.update_zoom_percentage_label()
         self.update_canvas_size_label()
+
+    def apply_preview(self):
+        for y in range(len(self.canvas.previewMatrix)):
+            for x in range(len(self.canvas.previewMatrix[y])):
+                if not self.canvas.previewMatrix[y][x] == (255, 255, 255, 0):
+                    self.canvas.pixelMatrix[y][x] = self.canvas.previewMatrix[y][x]
+                    self.canvas.previewMatrix[y][x] = (255, 255, 255, 0)
+
+                    canvasY = len(self.canvas.previewMatrix[y]) - 1 - y
+                    self.canvas.add_pixel((x, canvasY), self.canvas.pixelMatrix[y][x], "pixel", self.pixelBatch)
+                    self.canvas.previewBatchMatrix[y][x].delete()
+                    self.canvas.previewBatchMatrix[y][x] = None
 
     def convert_mouse_to_canvas_coordinates(self, x, y):
         # position of the mouse relative to window (0.0-1.0)
@@ -165,6 +208,7 @@ class Window(pyglet.window.Window):
         self.canvas.background.draw()
 
         self.pixelBatch.draw()
+        self.previewBatch.draw()
 
     def draw_toolbar_backgrounds(self):
         self.draw_top_toolbar_background()
@@ -226,9 +270,14 @@ class Window(pyglet.window.Window):
             self.positionLabel.draw()
 
     def on_key_press(self, symbol, modifiers):
-        # debug
+        # debug hotkeys TODO: remove when implemented in real GUI
         if symbol == pyglet.window.key._0:
             self.canvas.gridOn = not self.canvas.gridOn
+        elif symbol == pyglet.window.key._1:
+            print("PixelMatrix", self.canvas.pixelMatrix)
+            print("PixelBatchMatrix", self.canvas.pixelBatchMatrix)
+            print("PreviewMatrix", self.canvas.previewMatrix)
+            print("PreviewBatchMatrix", self.canvas.previewBatchMatrix)
 
     def on_mouse_drag(self, x, y, dx, dy, button, modifiers):
         self.set_mouse_coordinates(x, y)
@@ -238,9 +287,9 @@ class Window(pyglet.window.Window):
         or abs(self.canvas.endPos[1] - self.canvas.beginningPos[1]) > 0:
             if self.artist.mode == 0: # pencil tool
                 if button == pyglet.window.mouse.LEFT:
-                    self.canvas.draw_line(self.artist.primaryColor, self.pixelBatch)
+                    self.canvas.draw_line(self.artist.primaryColor, self.previewBatch)
                 elif button == pyglet.window.mouse.RIGHT:
-                    self.canvas.draw_line(self.artist.secondaryColor, self.pixelBatch)
+                    self.canvas.draw_line(self.artist.secondaryColor, self.previewBatch)
                 self.canvas.beginningPos[0], self.canvas.beginningPos[1] = self.canvas.endPos[0], self.canvas.endPos[1]
 
     def on_mouse_press(self, x, y, button, modifiers):
@@ -250,15 +299,18 @@ class Window(pyglet.window.Window):
             self.canvas.beginningPos[0], self.canvas.beginningPos[1] = self.canvas.mousePos[0], self.canvas.mousePos[1]
             if self.artist.mode == 0: # pencil tool
                 if button == pyglet.window.mouse.LEFT:
-                    self.canvas.draw_point(self.artist.primaryColor, self.pixelBatch)
+                    self.canvas.draw_point(self.artist.primaryColor, self.previewBatch)
                 elif button == pyglet.window.mouse.RIGHT:
-                    self.canvas.draw_point(self.artist.secondaryColor, self.pixelBatch)
+                    self.canvas.draw_point(self.artist.secondaryColor, self.previewBatch)
 
     def on_mouse_motion(self, x, y, dx, dy):
         self.set_mouse_coordinates(x, y)
 
         if self.canvas.is_mouse_on_canvas(self.mousePos[0], self.mousePos[1]):
             self.update_coordinates_label()
+
+    def on_mouse_release(self, x, y, button, modifiers):
+        self.apply_preview()
 
     def on_mouse_scroll(self, x, y, dx, dy):
         self.zoom(x, y, dy)
@@ -388,7 +440,6 @@ class Window(pyglet.window.Window):
                 self.top    = mouseYInWorld + (1 - mouseY)*self.zoomedHeight
 
 if __name__ == "__main__":
-    previewBatch = pyglet.graphics.Batch()
     topToolbarBatch = pyglet.graphics.Batch()
     topToolbarIconBatch = pyglet.graphics.Batch()
 

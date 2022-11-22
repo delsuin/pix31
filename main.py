@@ -2,6 +2,7 @@ import math
 import pyglet
 import pyglet.gl as gl
 
+import algorithms as algo
 import constants as const
 
 class Artist():
@@ -34,8 +35,9 @@ class Canvas():
         """
         matrixPosY = len(self.pixelMatrix) - 1 - pos[1]
 
-        self.add_pixel_to_batch((pos[0], matrixPosY), color, pixelBatch)
-        self.pixelMatrix[matrixPosY][pos[0]] = color
+        if 0 <= matrixPosY < const.CANVAS_SIZE and 0 <= pos[0] < const.CANVAS_SIZE:
+            self.add_pixel_to_batch((pos[0], matrixPosY), color, pixelBatch)
+            self.pixelMatrix[matrixPosY][pos[0]] = color
 
     def add_pixel_to_batch(self, pos, color, pixelBatch):
         """
@@ -61,8 +63,13 @@ class Canvas():
                     color[0], color[1], color[2], color[3], 
                     color[0], color[1], color[2], color[3])))
 
-    def draw_line(self, start, end):
-        pass
+    def draw_point(self, color, batch):
+        self.add_pixel(self.mousePos, color, batch)
+
+    def draw_line(self, color, batch):
+        pixels = algo.bresenham_line(self.beginningPos, self.endPos)
+        for pixel in pixels:
+            self.add_pixel(pixel, color, batch)
 
     def is_mouse_on_canvas(self, x, y):
         wWd2, wHd2 = const.WINDOW_START_WIDTH/2, const.WINDOW_START_HEIGHT/2
@@ -111,6 +118,21 @@ class Window(pyglet.window.Window):
         self.set_window_background_color()
         self.update_zoom_percentage_label()
         self.update_canvas_size_label()
+
+    def convert_mouse_to_canvas_coordinates(self, x, y):
+        # position of the mouse relative to window (0.0-1.0)
+        mouseX = x/self.width
+        mouseY = y/self.height
+
+        # mouse position in world coordinates
+        mouseWorldX = self.left   + mouseX*self.zoomedWidth
+        mouseWorldY = self.bottom + mouseY*self.zoomedHeight
+
+        # mouse position on canvas
+        mouseCanvasX = math.floor(mouseWorldX - const.WINDOW_START_WIDTH/2 + self.canvas.width/2)
+        mouseCanvasY = math.floor(mouseWorldY - const.WINDOW_START_HEIGHT/2 + self.canvas.height/2)
+
+        return mouseCanvasX, mouseCanvasY
 
     def draw_bottom_toolbar_background(self):
         # set gl stuff
@@ -209,13 +231,21 @@ class Window(pyglet.window.Window):
             self.canvas.gridOn = not self.canvas.gridOn
 
     def on_mouse_drag(self, x, y, dx, dy, button, modifiers):
-        self.canvas.endPos[0], self.canvas.endPos[1] = x, y
+        self.set_mouse_coordinates(x, y)
+        self.canvas.endPos[0], self.canvas.endPos[1] = self.convert_mouse_to_canvas_coordinates(x, y)
+
+        if abs(self.canvas.endPos[0] - self.canvas.beginningPos[0]) > 0 \
+        or abs(self.canvas.endPos[1] - self.canvas.beginningPos[1]) > 0:
+            self.canvas.draw_line(self.artist.primaryColor, self.pixelBatch)
+            self.canvas.beginningPos[0], self.canvas.beginningPos[1] = self.canvas.endPos[0], self.canvas.endPos[1]
 
     def on_mouse_press(self, x, y, buttons, modifiers):
+        self.set_mouse_coordinates(x, y)
+
         if self.canvas.is_mouse_on_canvas(self.mousePos[0], self.mousePos[1]):
+            self.canvas.beginningPos[0], self.canvas.beginningPos[1] = self.canvas.mousePos[0], self.canvas.mousePos[1]
             if self.artist.mode == 0:
-                self.canvas.beginningPos[0], self.canvas.beginningPos[1] = x, y
-                self.canvas.add_pixel(self.canvas.mousePos, self.artist.primaryColor, self.pixelBatch)
+                self.canvas.draw_point(self.artist.primaryColor, self.pixelBatch)
 
     def on_mouse_motion(self, x, y, dx, dy):
         self.set_mouse_coordinates(x, y)

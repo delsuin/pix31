@@ -1,10 +1,6 @@
 import math
 
 def bresenham_line(origin, pos):
-    """
-    Draws a line between two positions using Bresenham's line algorithm. 
-    Mode tells if the line is a line of pixels (0) or a line of pixels to erase (1).
-    """
     line = []
 
     x0, y0 = origin[0], origin[1]
@@ -105,14 +101,14 @@ def flood_fill(origin, canvas):
     """
     area = []
 
-    posList = []                                                # a list for possible fillable positions
+    posList = []                                                    # a list for possible fillable positions
     canvasCopy = canvas.copy()
     posList.append((origin[0], len(canvasCopy) - 1 - origin[1]))    # add the clicked position to the list
-    prevColor = canvasCopy[origin[1]][origin[0]]                # check the original color that will be recolored
+    prevColor = canvasCopy[origin[1]][origin[0]]                    # check the original color that will be recolored
     newColor = [x+1 for x in prevColor]
 
     while posList:
-        pos = posList.pop()                      # take one position out of the list
+        pos = posList.pop()   # take one position out of the list
         if canvasCopy[pos[1]][pos[0]] == prevColor:
             area.append((pos[0], len(canvasCopy) - 1 - pos[1]))
             canvasCopy[pos[1]][pos[0]] = newColor

@@ -11,7 +11,7 @@ def export_image(matrix, width, height):
 
     fCount = 0
     for f in os.listdir("."):
-        if f.startswith("image"):       # check if filename already exists
+        if f.startswith("image"):      # check if filename already exists
             fCount += 1                # calculate a number to filename if duplicate names
 
     if fCount == 0:

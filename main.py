@@ -26,16 +26,13 @@ class Canvas():
         self.previewMatrix = []
         self.previewBatchMatrix = []
 
-        self.mousePos = [0, 0] # mouse coordinates on canvas
-        self.beginningPos = [0, 0] # beginning coordinates of action
-        self.endPos = [0, 0] # end coordinates of action
+        self.mousePos = [0, 0]      # mouse coordinates on canvas
+        self.beginningPos = [0, 0]  # beginning coordinates of action
+        self.endPos = [0, 0]        # end coordinates of action
 
         self.gridOn = False
 
     def add_pixel(self, pos, color, matrix, batch):
-        """
-        Adds the pixel to the canvas matrix and calls a function to add the pixel to the batch.
-        """
         if matrix == "pixel":
             matrixPosY = len(self.pixelMatrix) - 1 - pos[1]
 
@@ -50,9 +47,6 @@ class Canvas():
                 self.previewMatrix[matrixPosY][pos[0]] = color
 
     def add_pixel_to_batch(self, pos, color, matrix, batch):
-        """
-        Adds a pixel to the batch in order to be drawn on screen
-        """
         x = pos[0] + self.origin[0]                              # convert pixel position to canvas position
         y = (self.height - pos[1]) + self.origin[1]
 
@@ -380,37 +374,36 @@ class Window(pyglet.window.Window):
 
     def init_palette(self):
         x, y = 180, 0
-        cut = 11           # How many palette colors in one row
+        cut = 11   # how many palette colors in one row
 
-        # Left color label
+        # left color label
         self.colorleft_label = pyglet.text.Label("Left:",
                 font_name=const.FONT_NAME,
                 font_size=9,
                 x=x, y=y+48,
                 anchor_x='left', anchor_y='bottom', bold=const.FONT_BOLD, batch=self.topToolbarBatch)
 
-        # Right color label
+        # right color label
         self.colorright_label = pyglet.text.Label("Right:",
                 font_name=const.FONT_NAME,
                 font_size=9,
                 x=x+35, y=y+48,
                 anchor_x='left', anchor_y='bottom', bold=const.FONT_BOLD, batch=self.topToolbarBatch)
 
-        # Initialize palette
         self.palette = []
         self.paletteColors = []
 
         for index in range(0, 33):
-            # First row
+            # first row
             if index < cut:
                 xx = x + 92 + index*16 + index*4
                 yy = y + 52
             else:
-                # Second row
+                # second row
                 if index < 2*cut:
                     xx = x + 92 + (index-cut)*16 + (index-cut)*4
                     yy = y + 32
-                # Third row
+                # third row
                 else:
                     xx = x + 92 + (index-2*cut)*16 + (index-2*cut)*4
                     yy = y + 12
@@ -455,7 +448,7 @@ class Window(pyglet.window.Window):
         
 
     def on_key_press(self, symbol, modifiers):
-        if symbol == pyglet.window.key._0: # debug export
+        if symbol == pyglet.window.key._0:   # debug export
             exp.export_image(self.canvas.pixelMatrix, const.CANVAS_SIZE_X, const.CANVAS_SIZE_Y)
 
     def on_mouse_drag(self, x, y, dx, dy, button, modifiers):
@@ -565,7 +558,7 @@ class Window(pyglet.window.Window):
         # apply preview layer to image layer
         self.apply_preview()
 
-        # Remove shadow from palette item
+        # remove shadow from palette item
         self.paletteShadowSprite.x = 0
         self.paletteShadowSprite.y = 100
 
@@ -610,11 +603,11 @@ class Window(pyglet.window.Window):
         self.set_icon(self.icon)
 
     def set_color_display(self):
-        # Left color display
+        # left color display
         self.paletteLeftColorImage = pyglet.image.SolidColorImagePattern(self.artist.primaryColor).create_image(24, 24)
         self.paletteLeftColorSprite = pyglet.sprite.Sprite(self.paletteLeftColorImage, x = 180, y = 22)
 
-        # Right color display
+        # right color display
         self.paletteRightColorImage = pyglet.image.SolidColorImagePattern(self.artist.secondaryColor).create_image(24, 24)
         self.paletteRightColorSprite = pyglet.sprite.Sprite(self.paletteRightColorImage, x = 180 + 38, y = 22)
 
@@ -636,7 +629,7 @@ class Window(pyglet.window.Window):
         gl.glClearColor(bg[0], bg[1], bg[2], bg[3])
 
     def update_coordinates_label(self):
-        # Set mouse coordinates label
+        # set mouse coordinates label
         self.positionLabel = pyglet.text.Label(f"({self.canvas.mousePos[0]}, {self.canvas.mousePos[1]})",
                 font_name=const.FONT_NAME,
                 font_size=const.FONT_SIZE,
@@ -684,7 +677,7 @@ class Window(pyglet.window.Window):
                 mouseXInWorld = self.left   + mouseX*self.zoomedWidth
                 mouseYInWorld = self.bottom + mouseY*self.zoomedHeight
 
-                # wtf??? (it works lol)
+                # ??? TODO: clean-up
                 if dy > 0:
                     if  not (const.WINDOW_START_WIDTH/2 - self.canvas.width/2 < mouseXInWorld < const.WINDOW_START_WIDTH/2 \
                     + self.canvas.width/2 and const.WINDOW_START_HEIGHT/2 - self.canvas.height/2 < mouseYInWorld \

@@ -45,6 +45,9 @@ class ModeButton():
             self.mode = "rectangle"
             img = pyglet.image.load('./icons/rect.png')
             self.iconRectangle = pyglet.sprite.Sprite(img, x=self.x+4, y=self.y+4, batch=batch)
+        elif self.index == 6:
+            self.mode = "ellipse"
+            # TODO: ellipse icon
         elif self.index == 7:
             self.mode = "fill"
             img = pyglet.image.load('./icons/paint-bucket.png')
@@ -144,6 +147,11 @@ class Canvas():
                 self.pixelBatchMatrix[matrixPosY][pos[0]].delete()
                 self.pixelBatchMatrix[matrixPosY][pos[0]] = None
                 self.pixelMatrix[matrixPosY][pos[0]] = (-1, -1, -1, -1)
+
+    def draw_ellipse(self, color, batch):
+        pixels = algo.ellipse(self.beginningPos, self.endPos)
+        for pixel in pixels:
+            self.add_pixel(pixel, color, "preview", batch)
 
     def draw_point(self, color, batch):
         self.add_pixel(self.mousePos, color, "preview", batch)
@@ -418,6 +426,12 @@ class Window(pyglet.window.Window):
                     self.canvas.draw_rectangle(self.artist.primaryColor, self.previewBatch)
                 elif button == pyglet.window.mouse.RIGHT:
                     self.canvas.draw_rectangle(self.artist.secondaryColor, self.previewBatch)
+            elif self.artist.mode == "ellipse":
+                self.clear_preview()
+                if button == pyglet.window.mouse.LEFT:
+                    self.canvas.draw_ellipse(self.artist.primaryColor, self.previewBatch)
+                elif button == pyglet.window.mouse.RIGHT:
+                    self.canvas.draw_ellipse(self.artist.secondaryColor, self.previewBatch)
 
     def on_mouse_press(self, x, y, button, modifiers):
         self.set_mouse_coordinates(x, y)
@@ -462,6 +476,8 @@ class Window(pyglet.window.Window):
                             # draw shadow on clicked item
                             self.buttonShadowSprite.x=box.x
                             self.buttonShadowSprite.y=box.y
+
+                            print(box.index, "-", self.artist.mode)
 
                             found = True
                             break

@@ -308,6 +308,7 @@ class Window(pyglet.window.Window):
             elif self.artist.mode == 1: # eraser tool
                 if button == pyglet.window.mouse.LEFT:
                     self.canvas.erase_line()
+                self.canvas.beginningPos[0], self.canvas.beginningPos[1] = self.canvas.endPos[0], self.canvas.endPos[1]
 
     def on_mouse_press(self, x, y, button, modifiers):
         self.set_mouse_coordinates(x, y)

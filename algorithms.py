@@ -1,5 +1,3 @@
-import math
-
 def bresenham_line(origin, pos):
     line = []
 

@@ -489,38 +489,40 @@ class Window(pyglet.window.Window):
 
     def on_mouse_press(self, x, y, button, modifiers):
         self.set_mouse_coordinates(x, y)
-        if self.canvas.is_mouse_on_canvas(self.mousePos[0], self.mousePos[1]):
-            self.canvas.beginningPos[0], self.canvas.beginningPos[1] = self.canvas.mousePos[0], self.canvas.mousePos[1]
-            if self.artist.mode == "pencil":
-                if button == pyglet.window.mouse.LEFT:
-                    self.canvas.draw_point(self.artist.primaryColor, self.previewBatch)
-                elif button == pyglet.window.mouse.RIGHT:
-                    self.canvas.draw_point(self.artist.secondaryColor, self.previewBatch)
-            elif self.artist.mode == "eraser":
-                if button == pyglet.window.mouse.LEFT:
-                    self.canvas.erase_point()
-            elif self.artist.mode == "line":
-                if button == pyglet.window.mouse.LEFT:
-                    self.canvas.draw_point(self.artist.primaryColor, self.previewBatch)
-                elif button == pyglet.window.mouse.RIGHT:
-                    self.canvas.draw_point(self.artist.secondaryColor, self.previewBatch)
-            elif self.artist.mode == "dropper":
-                if button == pyglet.window.mouse.LEFT:
-                    self.canvas.color_pick(self.canvas.mousePos, self.artist, 0)
-                elif button == pyglet.window.mouse.RIGHT:
-                    self.canvas.color_pick(self.canvas.mousePos, self.artist, 1)
-            elif self.artist.mode == "rectangle":
-                if button == pyglet.window.mouse.LEFT:
-                    self.canvas.draw_point(self.artist.primaryColor, self.previewBatch)
-                elif button == pyglet.window.mouse.RIGHT:
-                    self.canvas.draw_point(self.artist.secondaryColor, self.previewBatch)
-            elif self.artist.mode == "fill":
-                if button == pyglet.window.mouse.LEFT:
-                    self.canvas.fill(self.artist.primaryColor, self.pixelBatch)
-                elif button == pyglet.window.mouse.RIGHT:
-                    self.canvas.fill(self.artist.secondaryColor, self.pixelBatch)
+        if 48 < y < self.height - 80:   # inside main area
+            if self.canvas.is_mouse_on_canvas(self.mousePos[0], self.mousePos[1]):   # inside canvas
+                self.canvas.beginningPos[0], self.canvas.beginningPos[1] = self.canvas.mousePos[0], self.canvas.mousePos[1]
+                if self.artist.mode == "pencil":
+                    if button == pyglet.window.mouse.LEFT:
+                        self.canvas.draw_point(self.artist.primaryColor, self.previewBatch)
+                    elif button == pyglet.window.mouse.RIGHT:
+                        self.canvas.draw_point(self.artist.secondaryColor, self.previewBatch)
+                elif self.artist.mode == "eraser":
+                    if button == pyglet.window.mouse.LEFT:
+                        self.canvas.erase_point()
+                elif self.artist.mode == "line":
+                    if button == pyglet.window.mouse.LEFT:
+                        self.canvas.draw_point(self.artist.primaryColor, self.previewBatch)
+                    elif button == pyglet.window.mouse.RIGHT:
+                        self.canvas.draw_point(self.artist.secondaryColor, self.previewBatch)
+                elif self.artist.mode == "dropper":
+                    if button == pyglet.window.mouse.LEFT:
+                        self.canvas.color_pick(self.canvas.mousePos, self.artist, 0)
+                    elif button == pyglet.window.mouse.RIGHT:
+                        self.canvas.color_pick(self.canvas.mousePos, self.artist, 1)
+                    self.set_color_display()
+                elif self.artist.mode == "rectangle":
+                    if button == pyglet.window.mouse.LEFT:
+                        self.canvas.draw_point(self.artist.primaryColor, self.previewBatch)
+                    elif button == pyglet.window.mouse.RIGHT:
+                        self.canvas.draw_point(self.artist.secondaryColor, self.previewBatch)
+                elif self.artist.mode == "fill":
+                    if button == pyglet.window.mouse.LEFT:
+                        self.canvas.fill(self.artist.primaryColor, self.pixelBatch)
+                    elif button == pyglet.window.mouse.RIGHT:
+                        self.canvas.fill(self.artist.secondaryColor, self.pixelBatch)
         else:
-            if y > self.height - 80:
+            if y > self.height - 80:   # inside top toolbar
                 found = False
                 for box in self.paletteColors:
                     if box.x < x < box.x + 16 and self.height - 80 + box.y < y < self.height - 80 + box.y + 16:

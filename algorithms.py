@@ -43,37 +43,40 @@ def flood_fill(origin, canvas):
     """
     area = []
 
-    posList = []                                   # a list for possible fillable positions
-    posList.append(origin)                         # add the clicked position to the list
-    prevColor = canvas[origin[1]][origin[0]]       # check the original color that will be recolored
+    posList = []                                                # a list for possible fillable positions
+    canvasCopy = canvas.copy()
+    posList.append((origin[0], len(canvasCopy) - 1 - origin[1]))    # add the clicked position to the list
+    prevColor = canvasCopy[origin[1]][origin[0]]                # check the original color that will be recolored
+    newColor = [x+1 for x in prevColor]
 
     while posList:
         pos = posList.pop()                      # take one position out of the list
-        if canvas[pos[1]][pos[0]] == prevColor:
-            area.append(pos)
+        if canvasCopy[pos[1]][pos[0]] == prevColor:
+            area.append((pos[0], len(canvasCopy) - 1 - pos[1]))
+            canvasCopy[pos[1]][pos[0]] = newColor
 
             # check pos from upside
             x, y = pos[0], pos[1] - 1
-            if y >= 0 and x >= 0 and y < len(canvas) and x < len(canvas[pos[1]]):
-                if canvas[y][x] == prevColor:
+            if y >= 0 and x >= 0 and y < len(canvasCopy) and x < len(canvasCopy[pos[1]]):
+                if canvasCopy[y][x] == prevColor:
                     posList.append((x, y))
 
             # Check pos from downside
             y = pos[1] + 1
-            if y >= 0 and x >= 0 and y < len(canvas) and x < len(canvas[pos[1]]):
-                if canvas[y][x] == prevColor:
+            if y >= 0 and x >= 0 and y < len(canvasCopy) and x < len(canvasCopy[pos[1]]):
+                if canvasCopy[y][x] == prevColor:
                     posList.append((x, y))
 
             # Check pos from left side
             x, y = pos[0] - 1, pos[1]
-            if y >= 0 and x >= 0 and y < len(canvas) and x < len(canvas[pos[1]]):
-                if canvas[y][x] == prevColor:
+            if y >= 0 and x >= 0 and y < len(canvasCopy) and x < len(canvasCopy[pos[1]]):
+                if canvasCopy[y][x] == prevColor:
                     posList.append((x, y))
 
             # Check pos from right side
             x = pos[0] + 1
-            if y >= 0 and x >= 0 and y < len(canvas) and x < len(canvas[pos[1]]):
-                if canvas[y][x] == prevColor:
+            if y >= 0 and x >= 0 and y < len(canvasCopy) and x < len(canvasCopy[pos[1]]):
+                if canvasCopy[y][x] == prevColor:
                     posList.append((x, y))
 
     return area

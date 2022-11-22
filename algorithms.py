@@ -61,19 +61,19 @@ def flood_fill(origin, canvas):
                 if canvasCopy[y][x] == prevColor:
                     posList.append((x, y))
 
-            # Check pos from downside
+            # check pos from downside
             y = pos[1] + 1
             if y >= 0 and x >= 0 and y < len(canvasCopy) and x < len(canvasCopy[pos[1]]):
                 if canvasCopy[y][x] == prevColor:
                     posList.append((x, y))
 
-            # Check pos from left side
+            # check pos from left side
             x, y = pos[0] - 1, pos[1]
             if y >= 0 and x >= 0 and y < len(canvasCopy) and x < len(canvasCopy[pos[1]]):
                 if canvasCopy[y][x] == prevColor:
                     posList.append((x, y))
 
-            # Check pos from right side
+            # check pos from right side
             x = pos[0] + 1
             if y >= 0 and x >= 0 and y < len(canvasCopy) and x < len(canvasCopy[pos[1]]):
                 if canvasCopy[y][x] == prevColor:

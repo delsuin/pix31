@@ -9,7 +9,41 @@ class Artist():
     def __init__(self) -> None:
         self.primaryColor = (0, 0, 0, 255)
         self.secondaryColor = (255, 0, 0, 255)
-        self.mode = 0
+        self.mode = 1
+
+class ModeButton():
+    def __init__(self, x, y, baseBatch, batch, mode = 0):
+        self.x = 14 + x * 28
+        self.y = 14 + y * 28
+        self.mode = mode
+        self.hover = False
+        self.color = (120, 120, 120, 255)
+
+        print(self.x, self.y)
+
+        self.image = pyglet.image.SolidColorImagePattern(self.color).create_image(24, 24)
+        self.sprite = pyglet.sprite.Sprite(self.image, x=self.x, y=self.y, batch=baseBatch)
+
+        # Which icon to draw
+        if self.mode == 0: # Pencil tool
+            img = pyglet.image.load('./icons/pencil.png')
+            self.iconPencil = pyglet.sprite.Sprite(img, x=self.x+4, y=self.y+4, batch=batch)
+        elif self.mode == 1: # Fill tool
+            img = pyglet.image.load('./icons/paint-bucket.png')
+            self.iconBucket = pyglet.sprite.Sprite(img, x=self.x+4, y=self.y+4, batch=batch)
+        elif self.mode == 2: # Eraser
+            img = pyglet.image.load('./icons/eraser.png')
+            self.iconEraser = pyglet.sprite.Sprite(img, x=self.x+4, y=self.y+4, batch=batch)
+        elif self.mode == 3: # Color picker
+            img = pyglet.image.load('./icons/dropper.png')
+            self.iconDropper = pyglet.sprite.Sprite(img, x=self.x+4, y=self.y+4, batch=batch)
+        elif self.mode == 4: # Line draw
+            img = pyglet.image.load('./icons/line.png')
+            self.iconLine = pyglet.sprite.Sprite(img, x=self.x+4, y=self.y+4, batch=batch)
+        elif self.mode == 5: # Rectangle tool
+            img = pyglet.image.load('./icons/rect.png')
+            self.iconRectangle = pyglet.sprite.Sprite(img, x=self.x+4, y=self.y+4, batch=batch)
+
 
 class Canvas():
     def __init__(self, width, height) -> None:
@@ -50,7 +84,7 @@ class Canvas():
         """
         Adds a pixel to the batch in order to be drawn on screen
         """
-        x = pos[0] + self.origin[0]                          # convert pixel position to canvas position
+        x = pos[0] + self.origin[0]                              # convert pixel position to canvas position
         y = (self.height - pos[1]) + self.origin[1]
 
         if matrix == "pixel":
@@ -151,6 +185,11 @@ class Window(pyglet.window.Window):
 
         self.pixelBatch = pyglet.graphics.Batch()
         self.previewBatch = pyglet.graphics.Batch()
+        self.topToolbarBatch = pyglet.graphics.Batch()
+        self.topToolbarIconBatch = pyglet.graphics.Batch()
+
+        self.modeButtons = []
+        self.init_modebuttons()
 
         self.pixelCursorImage = pyglet.image.SolidColorImagePattern(
                     (0,0,0,96)).create_image(
@@ -170,7 +209,6 @@ class Window(pyglet.window.Window):
                 self.canvas.previewBatchMatrix[y].append(None)
 
         self.init_artist(artist)
-        
         self.init_camera()
         self.init_toolbar_backgrounds()
         self.set_app_icon()
@@ -248,10 +286,6 @@ class Window(pyglet.window.Window):
         self.pixelBatch.draw()
         self.previewBatch.draw()
 
-    def draw_toolbar_backgrounds(self):
-        self.draw_top_toolbar_background()
-        self.draw_bottom_toolbar_background()
-
     def draw_top_toolbar_background(self):
         # set gl stuff
         gl.glViewport(0, self.height - 80, self.width, 80)
@@ -263,6 +297,10 @@ class Window(pyglet.window.Window):
 
         # draw background
         self.topToolbarBgSprite.draw()
+
+    def draw_top_toolbar_icons(self):
+        self.topToolbarBatch.draw()
+        self.topToolbarIconBatch.draw()
 
     def init_artist(self, artist):
         self.artist = artist
@@ -284,6 +322,14 @@ class Window(pyglet.window.Window):
 
         self.canvas.update_background()
 
+    def init_modebuttons(self):
+        cut = 4
+        for i in range(0, 8):
+            if i < cut:
+                self.modeButtons.append(ModeButton(i, 1, self.topToolbarBatch, self.topToolbarIconBatch, i))
+            else:
+                self.modeButtons.append(ModeButton(i-cut, 0, self.topToolbarBatch, self.topToolbarIconBatch, i))
+
     def init_toolbar_backgrounds(self):
         bgCol = const.WINDOW_TOOLBAR_COLOR
 
@@ -299,15 +345,22 @@ class Window(pyglet.window.Window):
 
     def on_draw(self):
         self.draw_main_area()
+
         if not self.pixelCursorSprite == None:
             self.pixelCursorSprite.draw()
+
         if self.canvas.gridOn and self.zoomLevel < 0.5:
             self.draw_grid()
-        self.draw_toolbar_backgrounds()
+
+        self.draw_bottom_toolbar_background()
         self.zoomLabel.draw()
         self.sizeLabel.draw()
         if self.canvas.is_mouse_on_canvas(self.mousePos[0], self.mousePos[1]):
             self.positionLabel.draw()
+
+        self.draw_top_toolbar_background()
+        self.draw_top_toolbar_icons()
+        
 
     def on_key_press(self, symbol, modifiers):
         # debug hotkeys TODO: remove when implemented in real GUI
@@ -512,9 +565,6 @@ class Window(pyglet.window.Window):
                 self.top    = mouseYInWorld + (1 - mouseY)*self.zoomedHeight
 
 if __name__ == "__main__":
-    topToolbarBatch = pyglet.graphics.Batch()
-    topToolbarIconBatch = pyglet.graphics.Batch()
-
     appArtist = Artist()
     appCanvas = Canvas(
         const.CANVAS_SIZE_X, const.CANVAS_SIZE_Y)

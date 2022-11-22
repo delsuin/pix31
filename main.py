@@ -9,13 +9,14 @@ class Artist():
     def __init__(self) -> None:
         self.primaryColor = (0, 0, 0, 255)
         self.secondaryColor = (255, 0, 0, 255)
-        self.mode = 1
+        self.mode = "pencil"
 
 class ModeButton():
-    def __init__(self, x, y, baseBatch, batch, mode = 0):
+    def __init__(self, x, y, baseBatch, batch, index = 0):
         self.x = 14 + x * 28
         self.y = 14 + y * 28
-        self.mode = mode
+        self.mode = ""
+        self.index = index
         self.hover = False
         self.color = (120, 120, 120, 255)
 
@@ -24,26 +25,30 @@ class ModeButton():
         self.image = pyglet.image.SolidColorImagePattern(self.color).create_image(24, 24)
         self.sprite = pyglet.sprite.Sprite(self.image, x=self.x, y=self.y, batch=baseBatch)
 
-        # Which icon to draw
-        if self.mode == 0: # Pencil tool
+        if self.index == 0:
+            self.mode = "pencil"
             img = pyglet.image.load('./icons/pencil.png')
             self.iconPencil = pyglet.sprite.Sprite(img, x=self.x+4, y=self.y+4, batch=batch)
-        elif self.mode == 1: # Fill tool
-            img = pyglet.image.load('./icons/paint-bucket.png')
-            self.iconBucket = pyglet.sprite.Sprite(img, x=self.x+4, y=self.y+4, batch=batch)
-        elif self.mode == 2: # Eraser
+        elif self.index == 1:
+            self.mode = "eraser"
             img = pyglet.image.load('./icons/eraser.png')
             self.iconEraser = pyglet.sprite.Sprite(img, x=self.x+4, y=self.y+4, batch=batch)
-        elif self.mode == 3: # Color picker
+        elif self.index == 2:
+            self.mode = "dropper"
             img = pyglet.image.load('./icons/dropper.png')
             self.iconDropper = pyglet.sprite.Sprite(img, x=self.x+4, y=self.y+4, batch=batch)
-        elif self.mode == 4: # Line draw
+        elif self.index == 3:
+            self.mode = "line"
             img = pyglet.image.load('./icons/line.png')
             self.iconLine = pyglet.sprite.Sprite(img, x=self.x+4, y=self.y+4, batch=batch)
-        elif self.mode == 5: # Rectangle tool
+        elif self.index == 5:
+            self.mode = "rectangle"
             img = pyglet.image.load('./icons/rect.png')
             self.iconRectangle = pyglet.sprite.Sprite(img, x=self.x+4, y=self.y+4, batch=batch)
-
+        elif self.index == 7:
+            self.mode = "fill"
+            img = pyglet.image.load('./icons/paint-bucket.png')
+            self.iconBucket = pyglet.sprite.Sprite(img, x=self.x+4, y=self.y+4, batch=batch)
 
 class Canvas():
     def __init__(self, width, height) -> None:
@@ -123,6 +128,17 @@ class Canvas():
                         color[0], color[1], color[2], color[3], 
                         color[0], color[1], color[2], color[3])))
 
+    def color_pick(self, pos, artist, button):
+        """
+        Sets the current color to the one that the clicked pixel is.
+        """
+        matrixPosY = len(self.pixelMatrix) - 1 - pos[1]
+        if not self.pixelMatrix[matrixPosY][pos[0]] == (-1, -1, -1, -1):
+            if button == 0:
+                artist.primaryColor = self.pixelMatrix[matrixPosY][pos[0]]
+            elif button == 1:
+                artist.secondaryColor = self.pixelMatrix[matrixPosY][pos[0]]
+
     def delete_pixel(self, pos):
         matrixPosY = len(self.pixelMatrix) - 1 - pos[1]
 
@@ -191,11 +207,16 @@ class Window(pyglet.window.Window):
         self.modeButtons = []
         self.init_modebuttons()
 
+        # Pixel cursor
         self.pixelCursorImage = pyglet.image.SolidColorImagePattern(
                     (0,0,0,96)).create_image(
                     1,
                     1)
         self.pixelCursorSprite = None
+
+        # Shadow for pressing mode buttons
+        self.buttonShadowImage = pyglet.image.SolidColorImagePattern((0, 0, 0, 96)).create_image(24, 24)
+        self.buttonShadowSprite = pyglet.sprite.Sprite(self.buttonShadowImage, x=14, y=42)
 
         for y in range(0, const.CANVAS_SIZE_Y):
             self.canvas.pixelMatrix.append([])
@@ -323,8 +344,8 @@ class Window(pyglet.window.Window):
         self.canvas.update_background()
 
     def init_modebuttons(self):
-        cut = 4
-        for i in range(0, 8):
+        cut = 5
+        for i in range(0, 10):
             if i < cut:
                 self.modeButtons.append(ModeButton(i, 1, self.topToolbarBatch, self.topToolbarIconBatch, i))
             else:
@@ -360,18 +381,11 @@ class Window(pyglet.window.Window):
 
         self.draw_top_toolbar_background()
         self.draw_top_toolbar_icons()
+        self.buttonShadowSprite.draw()
         
 
     def on_key_press(self, symbol, modifiers):
-        # debug hotkeys TODO: remove when implemented in real GUI
-        if symbol == pyglet.window.key._1:
-            self.artist.mode = 1
-        elif symbol == pyglet.window.key._2:
-            self.artist.mode = 2
-        elif symbol == pyglet.window.key._3:
-            self.artist.mode = 3
-        elif symbol == pyglet.window.key._4:
-            self.artist.mode = 4
+        pass
 
     def on_mouse_drag(self, x, y, dx, dy, button, modifiers):
         self.set_mouse_coordinates(x, y)
@@ -380,17 +394,17 @@ class Window(pyglet.window.Window):
 
         if abs(self.canvas.endPos[0] - self.canvas.beginningPos[0]) > 0 \
         or abs(self.canvas.endPos[1] - self.canvas.beginningPos[1]) > 0:
-            if self.artist.mode == 1: # pencil tool
+            if self.artist.mode == "pencil":
                 if button == pyglet.window.mouse.LEFT:
                     self.canvas.draw_line(self.artist.primaryColor, self.previewBatch)
                 elif button == pyglet.window.mouse.RIGHT:
                     self.canvas.draw_line(self.artist.secondaryColor, self.previewBatch)
                 self.canvas.beginningPos[0], self.canvas.beginningPos[1] = self.canvas.endPos[0], self.canvas.endPos[1]
-            elif self.artist.mode == 2: # eraser tool
+            elif self.artist.mode == "eraser":
                 if button == pyglet.window.mouse.LEFT:
                     self.canvas.erase_line()
                 self.canvas.beginningPos[0], self.canvas.beginningPos[1] = self.canvas.endPos[0], self.canvas.endPos[1]
-            elif self.artist.mode == 3: # line tool
+            elif self.artist.mode == "line":
                 self.clear_preview()
                 if button == pyglet.window.mouse.LEFT:
                     self.canvas.draw_line(self.artist.primaryColor, self.previewBatch)
@@ -401,24 +415,43 @@ class Window(pyglet.window.Window):
         self.set_mouse_coordinates(x, y)
         if self.canvas.is_mouse_on_canvas(self.mousePos[0], self.mousePos[1]):
             self.canvas.beginningPos[0], self.canvas.beginningPos[1] = self.canvas.mousePos[0], self.canvas.mousePos[1]
-            if self.artist.mode == 1: # pencil tool
+            if self.artist.mode == "pencil":
                 if button == pyglet.window.mouse.LEFT:
                     self.canvas.draw_point(self.artist.primaryColor, self.previewBatch)
                 elif button == pyglet.window.mouse.RIGHT:
                     self.canvas.draw_point(self.artist.secondaryColor, self.previewBatch)
-            elif self.artist.mode == 2: # eraser tool
+            elif self.artist.mode == "eraser":
                 if button == pyglet.window.mouse.LEFT:
                     self.canvas.erase_point()
-            elif self.artist.mode == 3: # line tool
+            elif self.artist.mode == "line":
                 if button == pyglet.window.mouse.LEFT:
                     self.canvas.draw_point(self.artist.primaryColor, self.previewBatch)
                 elif button == pyglet.window.mouse.RIGHT:
                     self.canvas.draw_point(self.artist.secondaryColor, self.previewBatch)
-            elif self.artist.mode == 4: # fill tool
+            elif self.artist.mode == "dropper":
+                if button == pyglet.window.mouse.LEFT:
+                    self.canvas.color_pick(self.canvas.mousePos, self.artist, 0)
+                elif button == pyglet.window.mouse.RIGHT:
+                    self.canvas.color_pick(self.canvas.mousePos, self.artist, 1)
+            elif self.artist.mode == "fill":
                 if button == pyglet.window.mouse.LEFT:
                     self.canvas.fill(self.artist.primaryColor, self.pixelBatch)
                 elif button == pyglet.window.mouse.RIGHT:
                     self.canvas.fill(self.artist.secondaryColor, self.pixelBatch)
+        else:
+            if y > self.height - 80:
+                found = False
+                if found == False:
+                    for box in self.modeButtons:
+                        if box.x < x < box.x + 24 and self.height - 80 + box.y < y < self.height - 80 + box.y + 24:
+                            self.artist.mode = box.mode
+
+                            # draw shadow on clicked item
+                            self.buttonShadowSprite.x=box.x
+                            self.buttonShadowSprite.y=box.y
+
+                            found = True
+                            break
 
     def on_mouse_motion(self, x, y, dx, dy):
         self.set_mouse_coordinates(x, y)

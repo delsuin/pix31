@@ -129,9 +129,6 @@ class Canvas():
                         color[0], color[1], color[2], color[3])))
 
     def color_pick(self, pos, artist, button):
-        """
-        Sets the current color to the one that the clicked pixel is.
-        """
         matrixPosY = len(self.pixelMatrix) - 1 - pos[1]
         if not self.pixelMatrix[matrixPosY][pos[0]] == (-1, -1, -1, -1):
             if button == 0:
@@ -153,6 +150,11 @@ class Canvas():
 
     def draw_line(self, color, batch):
         pixels = algo.bresenham_line(self.beginningPos, self.endPos)
+        for pixel in pixels:
+            self.add_pixel(pixel, color, "preview", batch)
+
+    def draw_rectangle(self, color, batch):
+        pixels = algo.rectangle(self.beginningPos, self.endPos)
         for pixel in pixels:
             self.add_pixel(pixel, color, "preview", batch)
 
@@ -410,6 +412,12 @@ class Window(pyglet.window.Window):
                     self.canvas.draw_line(self.artist.primaryColor, self.previewBatch)
                 elif button == pyglet.window.mouse.RIGHT:
                     self.canvas.draw_line(self.artist.secondaryColor, self.previewBatch)
+            elif self.artist.mode == "rectangle":
+                self.clear_preview()
+                if button == pyglet.window.mouse.LEFT:
+                    self.canvas.draw_rectangle(self.artist.primaryColor, self.previewBatch)
+                elif button == pyglet.window.mouse.RIGHT:
+                    self.canvas.draw_rectangle(self.artist.secondaryColor, self.previewBatch)
 
     def on_mouse_press(self, x, y, button, modifiers):
         self.set_mouse_coordinates(x, y)
@@ -433,6 +441,11 @@ class Window(pyglet.window.Window):
                     self.canvas.color_pick(self.canvas.mousePos, self.artist, 0)
                 elif button == pyglet.window.mouse.RIGHT:
                     self.canvas.color_pick(self.canvas.mousePos, self.artist, 1)
+            elif self.artist.mode == "rectangle":
+                if button == pyglet.window.mouse.LEFT:
+                    self.canvas.draw_point(self.artist.primaryColor, self.previewBatch)
+                elif button == pyglet.window.mouse.RIGHT:
+                    self.canvas.draw_point(self.artist.secondaryColor, self.previewBatch)
             elif self.artist.mode == "fill":
                 if button == pyglet.window.mouse.LEFT:
                     self.canvas.fill(self.artist.primaryColor, self.pixelBatch)

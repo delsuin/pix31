@@ -81,20 +81,23 @@ def flood_fill(origin, canvas):
 
     return area
 
-def rectangle(origin, pos):
-    """
-    Rectangle
-    """
-    # TODO: if x1 or y1 smaller than 0 counterpart
+def rectangle(origin, end):
     path = []
 
-    x0, y0 = origin[0], origin[1]
-    x1, y1 = pos[0], pos[1]
+    points = [(origin[0], origin[1]), (end[0], end[1]), (origin[0], end[1]), (end[0], origin[1])]
+
+    x0 = min(points, key = lambda t: t[0])[0]
+    y0 = max(points, key = lambda t: t[1])[1]
+    
+    x1 = max(points, key = lambda t: t[0])[0]
+    y1 = min(points, key = lambda t: t[1])[1]
 
     for i in range(x0, x1+1):
         path.append((i, y0))
         path.append((i, y1))
 
-    for j in range(y0+1, y1):
+    for j in range(y1+1, y0):
         path.append((x0, j))
         path.append((x1, j))
+
+    return path

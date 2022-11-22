@@ -147,6 +147,12 @@ class Window(pyglet.window.Window):
         self.pixelBatch = pyglet.graphics.Batch()
         self.previewBatch = pyglet.graphics.Batch()
 
+        self.pixelCursorImage = pyglet.image.SolidColorImagePattern(
+                    (0,0,0,96)).create_image(
+                    1,
+                    1)
+        self.pixelCursorSprite = None
+
         for y in range(0, const.CANVAS_SIZE_Y):
             self.canvas.pixelMatrix.append([])
             self.canvas.pixelBatchMatrix.append([])
@@ -278,6 +284,8 @@ class Window(pyglet.window.Window):
 
     def on_draw(self):
         self.draw_main_area()
+        if not self.pixelCursorSprite == None:
+            self.pixelCursorSprite.draw()
         if self.canvas.gridOn and self.zoomLevel < 0.5:
             self.draw_grid()
         self.draw_toolbar_backgrounds()
@@ -295,6 +303,7 @@ class Window(pyglet.window.Window):
 
     def on_mouse_drag(self, x, y, dx, dy, button, modifiers):
         self.set_mouse_coordinates(x, y)
+        self.update_pixel_cursor_position()
         self.canvas.endPos[0], self.canvas.endPos[1] = self.convert_mouse_to_canvas_coordinates(x, y)
 
         if abs(self.canvas.endPos[0] - self.canvas.beginningPos[0]) > 0 \
@@ -312,7 +321,6 @@ class Window(pyglet.window.Window):
 
     def on_mouse_press(self, x, y, button, modifiers):
         self.set_mouse_coordinates(x, y)
-
         if self.canvas.is_mouse_on_canvas(self.mousePos[0], self.mousePos[1]):
             self.canvas.beginningPos[0], self.canvas.beginningPos[1] = self.canvas.mousePos[0], self.canvas.mousePos[1]
             if self.artist.mode == 0: # pencil tool
@@ -326,7 +334,7 @@ class Window(pyglet.window.Window):
 
     def on_mouse_motion(self, x, y, dx, dy):
         self.set_mouse_coordinates(x, y)
-
+        self.update_pixel_cursor_position()
         if self.canvas.is_mouse_on_canvas(self.mousePos[0], self.mousePos[1]):
             self.update_coordinates_label()
 
@@ -405,6 +413,13 @@ class Window(pyglet.window.Window):
                 font_size=const.FONT_SIZE,
                 x=self.width-4, y=0,
                 anchor_x='right', anchor_y='bottom', bold=const.FONT_BOLD)
+
+    def update_pixel_cursor_position(self):
+        if self.canvas.is_mouse_on_canvas(self.mousePos[0], self.mousePos[1]):
+            self.pixelCursorSprite = pyglet.sprite.Sprite(self.pixelCursorImage, x=self.canvas.origin[0]+self.canvas.mousePos[0],
+                                                        y=self.canvas.origin[1]+self.canvas.mousePos[1])
+        else:
+            self.pixelCursorSprite = None
 
     def update_zoom_percentage_label(self):
         self.zoomLabel = pyglet.text.Label(f"{int(1/self.zoomLevel*100)}%",

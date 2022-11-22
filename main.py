@@ -89,6 +89,15 @@ class Canvas():
                         color[0], color[1], color[2], color[3], 
                         color[0], color[1], color[2], color[3])))
 
+    def delete_pixel(self, pos):
+        matrixPosY = len(self.pixelMatrix) - 1 - pos[1]
+
+        if 0 <= matrixPosY < const.CANVAS_SIZE_Y and 0 <= pos[0] < const.CANVAS_SIZE_X:
+            if not self.pixelBatchMatrix[matrixPosY][pos[0]] == None:                              
+                self.pixelBatchMatrix[matrixPosY][pos[0]].delete()
+                self.pixelBatchMatrix[matrixPosY][pos[0]] = None
+                self.pixelMatrix[matrixPosY][pos[0]] = (-1, -1, -1, -1)
+
     def draw_point(self, color, batch):
         self.add_pixel(self.mousePos, color, "preview", batch)
 
@@ -96,6 +105,14 @@ class Canvas():
         pixels = algo.bresenham_line(self.beginningPos, self.endPos)
         for pixel in pixels:
             self.add_pixel(pixel, color, "preview", batch)
+
+    def erase_point(self):
+        self.delete_pixel(self.mousePos)
+
+    def erase_line(self):
+        pixels = algo.bresenham_line(self.beginningPos, self.endPos)
+        for pixel in pixels:
+            self.delete_pixel(pixel)
 
     def is_mouse_on_canvas(self, x, y):
         wWd2, wHd2 = const.WINDOW_START_WIDTH/2, const.WINDOW_START_HEIGHT/2
@@ -136,9 +153,9 @@ class Window(pyglet.window.Window):
             self.canvas.previewMatrix.append([])
             self.canvas.previewBatchMatrix.append([])
             for _ in range(0, const.CANVAS_SIZE_X):
-                self.canvas.pixelMatrix[y].append((255, 255, 255, 0))
+                self.canvas.pixelMatrix[y].append((-1, -1, -1, -1))
                 self.canvas.pixelBatchMatrix[y].append(None)
-                self.canvas.previewMatrix[y].append((255, 255, 255, 0))
+                self.canvas.previewMatrix[y].append((-1, -1, -1, -1))
                 self.canvas.previewBatchMatrix[y].append(None)
 
         self.init_artist(artist)
@@ -153,9 +170,9 @@ class Window(pyglet.window.Window):
     def apply_preview(self):
         for y in range(len(self.canvas.previewMatrix)):
             for x in range(len(self.canvas.previewMatrix[y])):
-                if not self.canvas.previewMatrix[y][x] == (255, 255, 255, 0):
+                if not self.canvas.previewMatrix[y][x] == (-1, -1, -1, -1):
                     self.canvas.pixelMatrix[y][x] = self.canvas.previewMatrix[y][x]
-                    self.canvas.previewMatrix[y][x] = (255, 255, 255, 0)
+                    self.canvas.previewMatrix[y][x] = (-1, -1, -1, -1)
 
                     canvasY = len(self.canvas.previewMatrix[y]) - 1 - y
                     self.canvas.add_pixel((x, canvasY), self.canvas.pixelMatrix[y][x], "pixel", self.pixelBatch)
@@ -271,13 +288,10 @@ class Window(pyglet.window.Window):
 
     def on_key_press(self, symbol, modifiers):
         # debug hotkeys TODO: remove when implemented in real GUI
-        if symbol == pyglet.window.key._0:
-            self.canvas.gridOn = not self.canvas.gridOn
-        elif symbol == pyglet.window.key._1:
-            print("PixelMatrix", self.canvas.pixelMatrix)
-            print("PixelBatchMatrix", self.canvas.pixelBatchMatrix)
-            print("PreviewMatrix", self.canvas.previewMatrix)
-            print("PreviewBatchMatrix", self.canvas.previewBatchMatrix)
+        if symbol == pyglet.window.key._1:
+            self.artist.mode = 0
+        elif symbol == pyglet.window.key._2:
+            self.artist.mode = 1
 
     def on_mouse_drag(self, x, y, dx, dy, button, modifiers):
         self.set_mouse_coordinates(x, y)
@@ -291,6 +305,9 @@ class Window(pyglet.window.Window):
                 elif button == pyglet.window.mouse.RIGHT:
                     self.canvas.draw_line(self.artist.secondaryColor, self.previewBatch)
                 self.canvas.beginningPos[0], self.canvas.beginningPos[1] = self.canvas.endPos[0], self.canvas.endPos[1]
+            elif self.artist.mode == 1: # eraser tool
+                if button == pyglet.window.mouse.LEFT:
+                    self.canvas.erase_line()
 
     def on_mouse_press(self, x, y, button, modifiers):
         self.set_mouse_coordinates(x, y)
@@ -302,6 +319,9 @@ class Window(pyglet.window.Window):
                     self.canvas.draw_point(self.artist.primaryColor, self.previewBatch)
                 elif button == pyglet.window.mouse.RIGHT:
                     self.canvas.draw_point(self.artist.secondaryColor, self.previewBatch)
+            elif self.artist.mode == 1: # eraser tool
+                if button == pyglet.window.mouse.LEFT:
+                    self.canvas.erase_point()
 
     def on_mouse_motion(self, x, y, dx, dy):
         self.set_mouse_coordinates(x, y)
@@ -310,6 +330,7 @@ class Window(pyglet.window.Window):
             self.update_coordinates_label()
 
     def on_mouse_release(self, x, y, button, modifiers):
+        # apply preview layer to image layer
         self.apply_preview()
 
     def on_mouse_scroll(self, x, y, dx, dy):

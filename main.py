@@ -20,38 +20,37 @@ class ModeButton():
         self.hover = False
         self.color = (120, 120, 120, 255)
 
-        print(self.x, self.y)
-
         self.image = pyglet.image.SolidColorImagePattern(self.color).create_image(24, 24)
         self.sprite = pyglet.sprite.Sprite(self.image, x=self.x, y=self.y, batch=baseBatch)
 
         if self.index == 0:
             self.mode = "pencil"
             img = pyglet.image.load('./icons/pencil.png')
-            self.iconPencil = pyglet.sprite.Sprite(img, x=self.x+4, y=self.y+4, batch=batch)
+            self.icon = pyglet.sprite.Sprite(img, x=self.x+4, y=self.y+4, batch=batch)
         elif self.index == 1:
             self.mode = "eraser"
             img = pyglet.image.load('./icons/eraser.png')
-            self.iconEraser = pyglet.sprite.Sprite(img, x=self.x+4, y=self.y+4, batch=batch)
+            self.icon = pyglet.sprite.Sprite(img, x=self.x+4, y=self.y+4, batch=batch)
         elif self.index == 2:
             self.mode = "dropper"
             img = pyglet.image.load('./icons/dropper.png')
-            self.iconDropper = pyglet.sprite.Sprite(img, x=self.x+4, y=self.y+4, batch=batch)
+            self.icon = pyglet.sprite.Sprite(img, x=self.x+4, y=self.y+4, batch=batch)
         elif self.index == 3:
             self.mode = "line"
             img = pyglet.image.load('./icons/line.png')
-            self.iconLine = pyglet.sprite.Sprite(img, x=self.x+4, y=self.y+4, batch=batch)
+            self.icon = pyglet.sprite.Sprite(img, x=self.x+4, y=self.y+4, batch=batch)
         elif self.index == 5:
             self.mode = "rectangle"
             img = pyglet.image.load('./icons/rect.png')
-            self.iconRectangle = pyglet.sprite.Sprite(img, x=self.x+4, y=self.y+4, batch=batch)
+            self.icon = pyglet.sprite.Sprite(img, x=self.x+4, y=self.y+4, batch=batch)
         elif self.index == 6:
             self.mode = "ellipse"
-            # TODO: ellipse icon
+            img = pyglet.image.load('./icons/ellipse.png')
+            self.icon = pyglet.sprite.Sprite(img, x=self.x+4, y=self.y+4, batch=batch)
         elif self.index == 7:
             self.mode = "fill"
             img = pyglet.image.load('./icons/paint-bucket.png')
-            self.iconBucket = pyglet.sprite.Sprite(img, x=self.x+4, y=self.y+4, batch=batch)
+            self.icon = pyglet.sprite.Sprite(img, x=self.x+4, y=self.y+4, batch=batch)
 
 class Canvas():
     def __init__(self, width, height) -> None:
@@ -476,8 +475,6 @@ class Window(pyglet.window.Window):
                             # draw shadow on clicked item
                             self.buttonShadowSprite.x=box.x
                             self.buttonShadowSprite.y=box.y
-
-                            print(box.index, "-", self.artist.mode)
 
                             found = True
                             break

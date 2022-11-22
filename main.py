@@ -41,13 +41,13 @@ class Canvas():
         """
         Adds a pixel to the batch in order to be drawn on screen
         """
-        x = pos[0] + self.origin[0]                            # convert pixel position to canvas position
+        x = pos[0] + self.origin[0]                          # convert pixel position to canvas position
         y = (self.height - pos[1]) + self.origin[1]
 
         if not self.pixelBatchMatrix[pos[1]][pos[0]] == None:                              
-            self.pixelBatchMatrix[pos[1]][pos[0]].delete()                                 # delete pixel from batch before replacing it                 
+            self.pixelBatchMatrix[pos[1]][pos[0]].delete()   # delete pixel from batch before replacing it                 
         
-        self.pixelBatchMatrix[pos[1]][pos[0]] = pixelBatch.add(4, pyglet.gl.GL_QUADS, None,     # add a pixel to the batch
+        self.pixelBatchMatrix[pos[1]][pos[0]] = pixelBatch.add(4, pyglet.gl.GL_QUADS, None,   # add a pixel to the batch
             ('v2f', [x, 
                     y - 1, 
                     x + 1, 
@@ -184,11 +184,13 @@ class Window(pyglet.window.Window):
         bgCol = const.WINDOW_TOOLBAR_COLOR
 
         # top
-        self.topToolbarBgImage = pyglet.image.SolidColorImagePattern((bgCol[0], bgCol[1], bgCol[2], bgCol[3])).create_image(self.width, const.WINDOW_TOP_TOOLBAR_HEIGHT)
+        self.topToolbarBgImage = pyglet.image.SolidColorImagePattern((bgCol[0], bgCol[1], bgCol[2], bgCol[3])).create_image(
+            self.width, const.WINDOW_TOP_TOOLBAR_HEIGHT)
         self.topToolbarBgSprite = pyglet.sprite.Sprite(self.topToolbarBgImage, x=0, y=0)
 
         # bottom
-        self.bottomToolbarBgImage = pyglet.image.SolidColorImagePattern((bgCol[0], bgCol[1], bgCol[2], bgCol[3])).create_image(self.width, const.WINDOW_BOTTOM_TOOLBAR_HEIGHT)
+        self.bottomToolbarBgImage = pyglet.image.SolidColorImagePattern((bgCol[0], bgCol[1], bgCol[2], bgCol[3])).create_image(
+            self.width, const.WINDOW_BOTTOM_TOOLBAR_HEIGHT)
         self.bottomToolbarBgSprite = pyglet.sprite.Sprite(self.bottomToolbarBgImage, x=0, y=0)
 
     def on_draw(self):
@@ -323,15 +325,17 @@ class Window(pyglet.window.Window):
 
                 # wtf??? (it works lol)
                 if dy > 0:
-                    if  not (const.WINDOW_START_WIDTH/2 - self.canvas.width/2 < mouseXInWorld < const.WINDOW_START_WIDTH/2 + self.canvas.width/2 \
-                    and const.WINDOW_START_HEIGHT/2 - self.canvas.height/2 < mouseYInWorld < const.WINDOW_START_HEIGHT/2 + self.canvas.height/2):
+                    if  not (const.WINDOW_START_WIDTH/2 - self.canvas.width/2 < mouseXInWorld < const.WINDOW_START_WIDTH/2 \
+                    + self.canvas.width/2 and const.WINDOW_START_HEIGHT/2 - self.canvas.height/2 < mouseYInWorld \
+                    < const.WINDOW_START_HEIGHT/2 + self.canvas.height/2):
                         mouseXInWorld = const.WINDOW_START_WIDTH/2
                         mouseYInWorld = const.WINDOW_START_HEIGHT/2
                         mouseX = (mouseXInWorld - self.left)/self.zoomedWidth
                         mouseY = (mouseYInWorld - self.bottom)/self.zoomedHeight
                 elif dy < 0:
-                    if  not (const.WINDOW_START_WIDTH/2 - self.canvas.width/2 < mouseXInWorld < const.WINDOW_START_WIDTH/2 + self.canvas.width/2 \
-                    and const.WINDOW_START_HEIGHT/2 - self.canvas.height/2 < mouseYInWorld < const.WINDOW_START_HEIGHT/2 + self.canvas.height/2):
+                    if  not (const.WINDOW_START_WIDTH/2 - self.canvas.width/2 < mouseXInWorld < const.WINDOW_START_WIDTH/2 \
+                    + self.canvas.width/2 and const.WINDOW_START_HEIGHT/2 - self.canvas.height/2 < mouseYInWorld \
+                    < const.WINDOW_START_HEIGHT/2 + self.canvas.height/2):
                         mouseXInWorld = const.WINDOW_START_WIDTH/2
                         mouseYInWorld = const.WINDOW_START_HEIGHT/2
                         mouseX = (mouseXInWorld - self.left)/self.zoomedWidth
@@ -353,5 +357,7 @@ if __name__ == "__main__":
     topToolbarIconBatch = pyglet.graphics.Batch()
 
     appArtist = Artist()
-    appCanvas = Canvas(const.CANVAS_SIZE, const.CANVAS_SIZE)
-    appWindow = Window(const.WINDOW_START_WIDTH, const.WINDOW_START_HEIGHT, appCanvas, appArtist, resizable=True, caption=const.APP_NAME).run()
+    appCanvas = Canvas(
+        const.CANVAS_SIZE, const.CANVAS_SIZE)
+    appWindow = Window(
+        const.WINDOW_START_WIDTH, const.WINDOW_START_HEIGHT, appCanvas, appArtist, resizable=True, caption=const.APP_NAME).run()

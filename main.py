@@ -402,16 +402,16 @@ class Window(pyglet.window.Window):
         for index in range(0, 33):
             # First row
             if index < cut:
-                xx = x + 76 + index*16 + index*4
+                xx = x + 92 + index*16 + index*4
                 yy = y + 52
             else:
                 # Second row
                 if index < 2*cut:
-                    xx = x + 76 + (index-cut)*16 + (index-cut)*4
+                    xx = x + 92 + (index-cut)*16 + (index-cut)*4
                     yy = y + 32
                 # Third row
                 else:
-                    xx = x + 76 + (index-2*cut)*16 + (index-2*cut)*4
+                    xx = x + 92 + (index-2*cut)*16 + (index-2*cut)*4
                     yy = y + 12
 
             self.paletteColors.append(PaletteButton(xx, yy, self.artist.palette[index], self.topToolbarBatch))
@@ -534,11 +534,10 @@ class Window(pyglet.window.Window):
                         elif button == pyglet.window.mouse.RIGHT:
                             self.artist.secondaryColor = box.color
 
-                        # Draw shadow on clicked item
+                        # draw shadow on clicked item
                         self.paletteShadowSprite.x = box.x
                         self.paletteShadowSprite.y = box.y
 
-                        # Update toolbar 
                         self.set_color_display()
                         found = True
                         break

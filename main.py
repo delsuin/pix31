@@ -4,6 +4,7 @@ import pyglet.gl as gl
 
 import algorithms as algo
 import constants as const
+import export as exp
 import palette_manager as palet
 
 class Artist():
@@ -454,7 +455,8 @@ class Window(pyglet.window.Window):
         
 
     def on_key_press(self, symbol, modifiers):
-        pass
+        if symbol == pyglet.window.key._0: # debug export
+            exp.export_image(self.canvas.pixelMatrix, const.CANVAS_SIZE_X, const.CANVAS_SIZE_Y)
 
     def on_mouse_drag(self, x, y, dx, dy, button, modifiers):
         self.set_mouse_coordinates(x, y)
